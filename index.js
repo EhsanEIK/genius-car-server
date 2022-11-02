@@ -23,6 +23,13 @@ async function run() {
             const services = await cursor.toArray();
             res.send(services);
         })
+
+        app.get('/services/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: id };
+            const service = await servicesCollection.findOne(query);
+            res.send(service);
+        })
     }
     finally { }
 }
