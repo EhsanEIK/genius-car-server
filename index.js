@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 require('dotenv').config();
 
-// const uri = ${process.env.DB_LOCALHOST};
+// const uri = process.env.DB_LOCALHOST;
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.fbieij7.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
@@ -17,7 +17,7 @@ async function run() {
         const servicesCollection = client.db('geniusCarDB').collection('services');
         const ordersCollection = client.db('geniusCarDB').collection('orders');
 
-        // service api
+        // services api
         app.get('/services', async (req, res) => {
             const query = {};
             const cursor = servicesCollection.find(query);
@@ -32,7 +32,17 @@ async function run() {
             res.send(service);
         })
 
-        // order api
+        // orders api
+        app.get('/orders', async (req, res) => {
+            let query = {};
+            if (req.query.email) {
+                query = { email: req.query.email };
+            }
+            const cursor = ordersCollection.find(query);
+            const orders = await cursor.toArray();
+            res.send(orders);
+        })
+
         app.post('/orders', async (req, res) => {
             const order = req.body;
             const result = await ordersCollection.insertOne(order);
