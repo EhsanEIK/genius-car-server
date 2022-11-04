@@ -9,15 +9,15 @@ app.use(cors());
 app.use(express.json());
 require('dotenv').config();
 
-function verifyJwt(req, res, next) {
-    const authorizHeader = req.headers.authorization;
-    if (!authorizHeader) {
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
         return res.status(401).send({ message: 'unauthorized access' });
     }
-    const token = authorizHeader.split(' ')[1];
-    jwt.verifyJwt(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
         if (err) {
-            return res.status(401).send({ message: 'unauthorized access' });
+            res.status(401).send({ message: 'unauthorized access' });
         }
         req.decoded = decoded;
         next();
@@ -56,7 +56,11 @@ async function run() {
         })
 
         // orders api
-        app.get('/orders', verifyJwt, async (req, res) => {
+        app.get('/orders', verifyJWT, async (req, res) => {
+            const decoded = req.decoded;
+            if (decoded.currentUser !== req.query.email) {
+                return res.status(403).send({ messge: 'unauthorized access' });
+            }
             let query = {};
             if (req.query.email) {
                 query = { email: req.query.email };
@@ -72,7 +76,7 @@ async function run() {
             res.send(result);
         })
 
-        app.patch('/orders/:id', async (req, res) => {
+        app.patch('/orders/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const status = req.body.status;
             const query = { _id: ObjectId(id) };
@@ -85,7 +89,7 @@ async function run() {
             res.send(result);
         })
 
-        app.delete('/orders/:id', async (req, res) => {
+        app.delete('/orders/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await ordersCollection.deleteOne(query);
