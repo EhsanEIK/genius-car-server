@@ -17,7 +17,7 @@ function verifyJWT(req, res, next) {
     const token = authHeader.split(' ')[1];
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
         if (err) {
-            res.status(401).send({ message: '401(2)-unauthorized access' });
+            return res.status(401).send({ message: '401(2)-unauthorized access' });
         }
         req.decoded = decoded;
         next();
@@ -58,7 +58,7 @@ async function run() {
         // orders api
         app.get('/orders', verifyJWT, async (req, res) => {
             const decoded = req.decoded;
-            if (decoded.currentUser !== req.query.email) {
+            if (decoded?.currentUser !== req.query.email) {
                 return res.status(403).send({ messge: 'unauthorized access' });
             }
             let query = {};
