@@ -12,12 +12,12 @@ require('dotenv').config();
 function verifyJWT(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-        return res.status(401).send({ message: 'unauthorized access' });
+        return res.status(401).send({ message: '401-unauthorized access' });
     }
     const token = authHeader.split(' ')[1];
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
         if (err) {
-            res.status(401).send({ message: 'unauthorized access' });
+            res.status(401).send({ message: '401(2)-unauthorized access' });
         }
         req.decoded = decoded;
         next();
@@ -70,7 +70,7 @@ async function run() {
             res.send(orders);
         })
 
-        app.post('/orders', async (req, res) => {
+        app.post('/orders', verifyJWT, async (req, res) => {
             const order = req.body;
             const result = await ordersCollection.insertOne(order);
             res.send(result);
