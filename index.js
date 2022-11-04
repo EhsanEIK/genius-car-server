@@ -9,6 +9,21 @@ app.use(cors());
 app.use(express.json());
 require('dotenv').config();
 
+function verifyJwt(req, res, next) {
+    const authorizHeader = req.headers.authorization;
+    if (!authorizHeader) {
+        return res.status(401).send({ message: 'unauthorized access' });
+    }
+    const token = authorizHeader.split(' ')[1];
+    jwt.verifyJwt(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+        if (err) {
+            return res.status(401).send({ message: 'unauthorized access' });
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
+
 // const uri = process.env.DB_LOCALHOST;
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.fbieij7.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -41,7 +56,7 @@ async function run() {
         })
 
         // orders api
-        app.get('/orders', async (req, res) => {
+        app.get('/orders', verifyJwt, async (req, res) => {
             let query = {};
             if (req.query.email) {
                 query = { email: req.query.email };
