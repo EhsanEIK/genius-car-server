@@ -43,10 +43,34 @@ async function run() {
         // services api
         app.get('/services', async (req, res) => {
             let query = {};
-            req.query.priceRange === 'low' ? query = { price: { $lt: 100 } } : query = {};
-            const order = req.query.order === 'asc' ? 1 : -1;
-            const cursor = servicesCollection.find(query).sort({ price: order });
-            const services = await cursor.toArray();
+            let order;
+            let cursor;
+            let services;
+            const search = req.query.search;
+            const priceRange = req.query.priceRange;
+            console.log(priceRange)
+            if (search.length) {
+                console.log(search)
+                query = {
+                    $text: {
+                        $search: search,
+                    }
+                }
+                order = req.query.order === 'asc' ? 1 : -1;
+                cursor = servicesCollection.find(query).sort({ price: order });
+                services = await cursor.toArray();
+                return res.send(services);
+            }
+            if (priceRange.length) {
+                console.log(priceRange)
+                order = req.query.order === 'asc' ? 1 : -1;
+                priceRange === 'low' ? query = { price: { $lt: 100 } } : query = {};
+                cursor = servicesCollection.find(query).sort({ price: order });
+                services = await cursor.toArray();
+                return res.send(services);
+            }
+            cursor = servicesCollection.find(query).sort({ price: order });
+            services = await cursor.toArray();
             res.send(services);
         })
 
