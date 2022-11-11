@@ -43,7 +43,9 @@ async function run() {
         // services api
         app.get('/services', async (req, res) => {
             const query = {};
-            const cursor = servicesCollection.find(query);
+            let priceSort;
+            const order = req.query.order === 'asc' ? 1 : -1;
+            const cursor = servicesCollection.find(query).sort({ price: order });
             const services = await cursor.toArray();
             res.send(services);
         })
